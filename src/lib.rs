@@ -6,7 +6,7 @@
 mod matrix;
 mod vector;
 mod vector3d;
-mod vortex;
+mod vortex_panel;
 
 use pyo3::prelude::*;
 
@@ -16,7 +16,7 @@ pub use vector::Vector;
 
 pub use vector3d::Vector3D;
 
-pub use vortex::VortexPanel;
+pub use vortex_panel::VortexPanel;
 
 /// Formats the sum of two numbers as string.
 // #[pyfunction]
