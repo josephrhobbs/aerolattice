@@ -1,7 +1,10 @@
 [package]
 name = "aerolattice"
+description = "A blazingly fast aerodynamics package built for modern aerospace applications."
+repository = "https://github.com/josephrhobbs/aerolattice.git"
 version = "0.5.0"
 edition = "2021"
+license = "MIT"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [lib]
