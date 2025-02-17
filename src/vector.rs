@@ -4,11 +4,16 @@
 //! the `Vector` structure can represent vectors of arbitrary dimension.  Use of this
 //! structure is recommended when representing linear systems of equations.
 
-use pyo3::prelude::*;
+use pyo3::{
+    exceptions::PyTypeError,
+    prelude::*,
+};
 
 use std::ops::{
+    Add,
     Index,
     IndexMut,
+    Sub,
 };
 
 #[pyclass]
@@ -17,6 +22,9 @@ use std::ops::{
 pub struct Vector {
     /// This vector's values.
     pub values: Vec<f64>,
+
+    /// This vector's dimension.
+    pub n: usize,
 }
 
 #[pymethods]
@@ -25,6 +33,7 @@ impl Vector {
     /// Construct a new N-dimensional vector.
     pub fn new(values: Vec<f64>) -> Self {
         Self {
+            n: values.len(),
             values,
         }
     }
@@ -63,6 +72,54 @@ impl Vector {
     /// Index into this vector, setting a floating-point value.
     pub fn index_mut(&mut self, i: usize, value: f64) {
         self[i] = value;
+    }
+    
+    #[pyo3(name = "__add__")]
+    /// Add two vectors.
+    pub fn add(&self, vector: Vector) -> PyResult<Vector> {
+        if self.n == vector.n {
+            Ok (self.clone() + vector)
+        } else {
+            Err (PyTypeError::new_err("vectors must have the same dimension"))
+        }
+    }
+
+    #[pyo3(name = "__sub__")]
+    /// Subtract two vectors.
+    pub fn sub(&self, vector: Vector) -> PyResult<Vector> {
+        if self.n == vector.n {
+            Ok (self.clone() - vector)
+        } else {
+            Err (PyTypeError::new_err("vectors must have the same dimension"))
+        }
+    }
+}
+
+impl Add<Vector> for Vector {
+    type Output = Vector;
+
+    fn add(self, vector: Vector) -> Self::Output {
+        let mut output = vec![0.0; self.n];
+
+        for i in 0..self.n {
+            output[i] = self[i] + vector[i];
+        }
+
+        Vector::new(output)
+    }
+}
+
+impl Sub<Vector> for Vector {
+    type Output = Vector;
+
+    fn sub(self, vector: Vector) -> Self::Output {
+        let mut output = vec![0.0; self.n];
+
+        for i in 0..self.n {
+            output[i] = self[i] - vector[i];
+        }
+
+        Vector::new(output)
     }
 }
 

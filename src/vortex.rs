@@ -2,9 +2,11 @@
 
 use pyo3::prelude::*;
 
-// /// A vortex panel.
-// pub struct VortexPanel {
-//     #[pyo3(get, set)]
-//     /// Center of the vortex panel.
+use crate::Vector3D;
 
-// }
+/// A vortex panel.
+pub struct VortexPanel {
+    #[pyo3(get, set)]
+    /// Center of the vortex panel.
+    
+}

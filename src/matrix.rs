@@ -6,9 +6,11 @@
 //! same manner that the `Vector3D` structure is.
 
 use std::ops::{
+    Add,
     Index,
     IndexMut,
     Mul,
+    Sub,
 };
 
 use pyo3::{
@@ -87,6 +89,26 @@ impl Matrix {
         self[i] = value;
     }
 
+    #[pyo3(name = "__add__")]
+    /// Add two matrices.
+    pub fn add(&self, matrix: Matrix) -> PyResult<Matrix> {
+        if self.n == matrix.n {
+            Ok (self.clone() + matrix)
+        } else {
+            Err (PyTypeError::new_err("matrices must have the same dimension"))
+        }
+    }
+
+    #[pyo3(name = "__sub__")]
+    /// Subtract two matrices.
+    pub fn sub(&self, matrix: Matrix) -> PyResult<Matrix> {
+        if self.n == matrix.n {
+            Ok (self.clone() - matrix)
+        } else {
+            Err (PyTypeError::new_err("matrices must have the same dimension"))
+        }
+    }
+
     #[pyo3(name = "__matmul__")]
     /// Multiply this matrix by a matrix, returning a resultant matrix.
     pub fn times_matrix(&self, matrix: Matrix) -> PyResult<Matrix> {
@@ -100,7 +122,7 @@ impl Matrix {
     #[pyo3(name = "__mul__")]
     /// Multiply this matrix by a vector, returning a resultant vector.
     pub fn times_vector(&self, vector: Vector) -> PyResult<Vector> {
-        if self.n == vector.values.len() {
+        if self.n == vector.n {
             Ok (self.clone() * vector)
         } else {
             Err (PyTypeError::new_err("matrix and vector must have the same dimension"))
@@ -198,6 +220,47 @@ impl Matrix {
         for k in 0..self.values.len() {
             self[(i, k)] -= s * self[(j, k)];
         }
+    }
+}
+
+
+impl Add<Matrix> for Matrix {
+    type Output = Matrix;
+
+    fn add(self, matrix: Matrix) -> Self::Output {
+        let mut output = Vec::new();
+
+        for i in 0..self.n {
+            let mut row = vec![0.0; self.n];
+
+            for j in 0..self.n {
+                row[j] = self[(i, j)] + matrix[(i, j)];
+            }
+
+            output.push(row);
+        }
+
+        Matrix::new(output)
+    }
+}
+
+impl Sub<Matrix> for Matrix {
+    type Output = Matrix;
+
+    fn sub(self, matrix: Matrix) -> Self::Output {
+        let mut output = Vec::new();
+
+        for i in 0..self.n {
+            let mut row = vec![0.0; self.n];
+
+            for j in 0..self.n {
+                row[j] = self[(i, j)] - matrix[(i, j)];
+            }
+
+            output.push(row);
+        }
+
+        Matrix::new(output)
     }
 }
 

@@ -107,7 +107,7 @@ impl Vector3D {
     }
 }
 
-impl Add for Vector3D {
+impl Add<Vector3D> for Vector3D {
     type Output = Self;
 
     fn add(self, other: Self) -> Self::Output {
@@ -119,7 +119,7 @@ impl Add for Vector3D {
     }
 }
 
-impl Sub for Vector3D {
+impl Sub<Vector3D> for Vector3D {
     type Output = Self;
 
     fn sub(self, other: Self) -> Self::Output {
@@ -131,7 +131,7 @@ impl Sub for Vector3D {
     }
 }
 
-impl Mul for Vector3D {
+impl Mul<Vector3D> for Vector3D {
     type Output = Self;
 
     fn mul(self, other: Self) -> Self::Output {
