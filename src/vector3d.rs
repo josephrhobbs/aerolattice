@@ -20,15 +20,15 @@ use std::ops::{
 pub struct Vector3D {
     #[pyo3(get, set)]
     /// X coordinate.
-    x: f64,
+    pub x: f64,
 
     #[pyo3(get, set)]
     /// Y coordinate.
-    y: f64,
+    pub y: f64,
 
     #[pyo3(get, set)]
     /// Z coordinate.
-    z: f64,
+    pub z: f64,
 }
 
 #[pymethods]
@@ -103,6 +103,15 @@ impl Vector3D {
             x: self.x / abs,
             y: self.y / abs,
             z: self.z / abs,
+        }
+    }
+
+    /// Scale this vector by a scalar.
+    pub fn scale(&self, scalar: f64) -> Self {
+        Self {
+            x: self.x * scalar,
+            y: self.y * scalar,
+            z: self.z * scalar,
         }
     }
 }
