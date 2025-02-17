@@ -5,10 +5,10 @@ use pyo3::prelude::*;
 use crate::Vector3D;
 
 /// Pi.
-const PI: f64 = 3.141592653;
+const PI: f64 = std::f64::consts::PI;
 
 #[pyclass]
-#[derive(Clone, Debug)]
+#[derive(Clone, Copy, Debug)]
 /// A vortex panel.
 pub struct VortexPanel {
     #[pyo3(get, set)]
@@ -82,7 +82,7 @@ impl VortexPanel {
         let cos_angle2 = to_p2.scale(-1.0).dot(p1_to_p2);
 
         // Contribution of central filament
-        let contribution_central = -self.circulation / 4.0 / PI / r_central * (cos_angle1 - cos_angle2);
+        let mut contribution_central = -self.circulation / 4.0 / PI / r_central * (cos_angle1 - cos_angle2);
         let v1 = (self.p2 - self.p1).cross(to_central_filament).normalize().scale(contribution_central);
 
         // LEFT FILAMENT (P1 -> INFTY)

@@ -20,6 +20,7 @@ use std::ops::{
 #[derive(Clone, Debug)]
 /// A vector in N-dimensional space.
 pub struct Vector {
+    #[pyo3(get)]
     /// This vector's values.
     pub values: Vec<f64>,
 
@@ -35,6 +36,20 @@ impl Vector {
         Self {
             n: values.len(),
             values,
+        }
+    }
+
+    /// Scale this vector by a given scalar.
+    pub fn scale(&self, scalar: f64) -> Self {
+        let mut output = Vec::new();
+
+        for v in &self.values {
+            output.push(v * scalar);
+        }
+
+        Self {
+            n: self.values.len(),
+            values: output,
         }
     }
 

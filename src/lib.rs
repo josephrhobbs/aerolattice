@@ -5,6 +5,7 @@
 
 mod airframe;
 mod matrix;
+mod section;
 mod vector;
 mod vector3d;
 mod vortex_panel;
@@ -14,6 +15,8 @@ use pyo3::prelude::*;
 pub use airframe::Airframe;
 
 pub use matrix::Matrix;
+
+pub use section::Section;
 
 pub use vector::Vector;
 
@@ -37,6 +40,9 @@ fn aerolattice(m: &Bound<'_, PyModule>) -> PyResult<()> {
 
     // Add `Matrix` class
     m.add_class::<Matrix>()?;
+
+    // Add `Section` class
+    m.add_class::<Section>()?;
 
     // Add `Vector` class
     m.add_class::<Vector>()?;
