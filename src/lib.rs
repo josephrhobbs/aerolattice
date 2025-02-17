@@ -3,12 +3,15 @@
 #[deny(warnings)]
 #[deny(missing_docs)]
 
+mod airframe;
 mod matrix;
 mod vector;
 mod vector3d;
 mod vortex_panel;
 
 use pyo3::prelude::*;
+
+pub use airframe::Airframe;
 
 pub use matrix::Matrix;
 
@@ -29,6 +32,9 @@ pub use vortex_panel::VortexPanel;
 fn aerolattice(m: &Bound<'_, PyModule>) -> PyResult<()> {
     // m.add_function(wrap_pyfunction!(sum_as_string, m)?)?;
     
+    // Add `Airframe` class
+    m.add_class::<Airframe>()?;
+
     // Add `Matrix` class
     m.add_class::<Matrix>()?;
 

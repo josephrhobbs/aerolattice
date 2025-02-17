@@ -8,6 +8,7 @@ use crate::Vector3D;
 const PI: f64 = 3.141592653;
 
 #[pyclass]
+#[derive(Clone, Debug)]
 /// A vortex panel.
 pub struct VortexPanel {
     #[pyo3(get, set)]
