@@ -59,7 +59,7 @@ impl Section {
             1.0,
         );
 
-        // Boundary condition location (half chord from center)
+        // Boundary condition location (three-quarters chord from center)
         let boundary_condition = p1 + (p2 - p1).scale(0.5) + quarter_chord.scale(3.0);
 
         Self {
