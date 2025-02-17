@@ -1,0 +1,2 @@
+//! Vortex lattice implementation.
+
