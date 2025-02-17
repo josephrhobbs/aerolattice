@@ -1,4 +1,10 @@
 //! Three-dimensional vector implementation.
+//!
+//! Unlike the `Vector` structure, which is used for vectors of arbitrary dimension,
+//! the `Vector3D` structure is specifically intended for representing points and
+//! directions in three-dimensional Cartesian space.  The `Vector` structure is
+//! primarily dedicated to linear algebra computations and is not recommended for
+//! use when representing objects or fluid flows.
 
 use pyo3::prelude::*;
 

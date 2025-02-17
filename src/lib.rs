@@ -1,8 +1,17 @@
 //! Main library for AeroLattice.
 
+#[deny(warnings)]
+#[deny(missing_docs)]
+
+mod matrix;
+mod vector;
 mod vector3d;
 
 use pyo3::prelude::*;
+
+pub use matrix::Matrix;
+
+pub use vector::Vector;
 
 pub use vector3d::Vector3D;
 
@@ -17,7 +26,13 @@ pub use vector3d::Vector3D;
 fn aerolattice(m: &Bound<'_, PyModule>) -> PyResult<()> {
     // m.add_function(wrap_pyfunction!(sum_as_string, m)?)?;
     
-    // Add `Vector` class.
+    // Add `Matrix` class
+    m.add_class::<Matrix>()?;
+
+    // Add `Vector` class
+    m.add_class::<Vector>()?;
+
+    // Add `Vector3D` class
     m.add_class::<Vector3D>()?;
     
     Ok(())
