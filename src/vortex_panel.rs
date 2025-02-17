@@ -82,7 +82,7 @@ impl VortexPanel {
         let cos_angle2 = to_p2.scale(-1.0).dot(p1_to_p2);
 
         // Contribution of central filament
-        let mut contribution_central = -self.circulation / 4.0 / PI / r_central * (cos_angle1 - cos_angle2);
+        let contribution_central = -self.circulation / 4.0 / PI / r_central * (cos_angle1 - cos_angle2);
         let v1 = (self.p2 - self.p1).cross(to_central_filament).normalize().scale(contribution_central);
 
         // LEFT FILAMENT (P1 -> INFTY)
