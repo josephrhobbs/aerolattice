@@ -6,6 +6,7 @@
 mod matrix;
 mod vector;
 mod vector3d;
+mod vortex;
 
 use pyo3::prelude::*;
 
@@ -14,6 +15,8 @@ pub use matrix::Matrix;
 pub use vector::Vector;
 
 pub use vector3d::Vector3D;
+
+pub use vortex::VortexPanel;
 
 /// Formats the sum of two numbers as string.
 // #[pyfunction]
@@ -34,6 +37,9 @@ fn aerolattice(m: &Bound<'_, PyModule>) -> PyResult<()> {
 
     // Add `Vector3D` class
     m.add_class::<Vector3D>()?;
+
+    // Add `VortexPanel` class
+    m.add_class::<VortexPanel>()?;
     
     Ok(())
 }
