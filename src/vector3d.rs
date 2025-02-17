@@ -11,7 +11,7 @@ use std::ops::{
 #[pyclass]
 #[derive(Clone, Copy, Debug)]
 /// A vector in three-dimensional space.
-pub struct Vector {
+pub struct Vector3D {
     #[pyo3(get, set)]
     /// X coordinate.
     x: f64,
@@ -26,7 +26,7 @@ pub struct Vector {
 }
 
 #[pymethods]
-impl Vector {
+impl Vector3D {
     #[new]
     /// Construct a new vector.
     pub fn new(x: f64, y: f64, z: f64) -> Self {
@@ -41,7 +41,7 @@ impl Vector {
     /// Display a Pythonic representation of this vector.
     pub fn py_repr(&self) -> String {
         format!(
-            "Vector({}, {}, {})",
+            "Vector3D({}, {}, {})",
             self.x,
             self.y,
             self.z,
@@ -86,7 +86,7 @@ impl Vector {
     #[pyo3(name = "__abs__")]
     /// Calculate the norm of this vector.
     pub fn abs(&self) -> f64 {
-        (self.x.powi(2) + self.y.powi(2) + self.z.powi(2)).sqrt()
+        self.dot(*self).sqrt()
     }
 
     /// Return the unit vector parallel to this vector.
@@ -101,7 +101,7 @@ impl Vector {
     }
 }
 
-impl Add for Vector {
+impl Add for Vector3D {
     type Output = Self;
 
     fn add(self, other: Self) -> Self::Output {
@@ -113,7 +113,7 @@ impl Add for Vector {
     }
 }
 
-impl Sub for Vector {
+impl Sub for Vector3D {
     type Output = Self;
 
     fn sub(self, other: Self) -> Self::Output {
@@ -125,7 +125,7 @@ impl Sub for Vector {
     }
 }
 
-impl Mul for Vector {
+impl Mul for Vector3D {
     type Output = Self;
 
     fn mul(self, other: Self) -> Self::Output {
