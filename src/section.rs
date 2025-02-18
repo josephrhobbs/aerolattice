@@ -2,11 +2,7 @@
 //!
 //! The `Section` data structure represents a span-wise element of an airframe.
 //! The AeroLattice program represents a section as one or more horseshoe vortices
-//! shed downstream from the quarter-chord of the section.
-//!
-//! *Note* that at this time, the `Section` data structure only supports one
-//! chord-wise horseshoe vortices, but functionality for multiple vortices will
-//! be added in the near future.
+//! shed downstream from the section.
 
 use pyo3::prelude::*;
 
@@ -16,7 +12,7 @@ use crate::{
 };
 
 #[pyclass]
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Debug)]
 /// An airframe section represented by one or more horseshoe vortices.
 pub struct Section {
     /// Leading edge P1.
@@ -25,49 +21,77 @@ pub struct Section {
     /// Leading edge P2.
     p2: Vector3D,
 
+    /// Center of leading edge.
+    pub center: Vector3D,
+
+    /// Horseshoe vortex panels.
+    pub vortices: Vec<VortexPanel>,
+
+    /// Boundary condition locations.
+    pub boundary_conditions: Vec<Vector3D>,
+
     /// Normal vector.
     pub normal: Vector3D,
-
-    /// Boundary condition location.
-    pub boundary_condition: Vector3D,
-
-    /// Horseshoe vortex panel.
-    vortex: VortexPanel,
 
     /// Chord-wise dimension of this section.
     /// 
     /// Note that multiple vortex panels may be used in the chord-wise
     /// direction on a single section to create a higher-fidelity simulation.
-    chord: f64,
+    pub chord: f64,
 }
 
 #[pymethods]
 impl Section {
     #[new]
     /// Construct a new airframe section.
-    pub fn new(p1: Vector3D, p2: Vector3D, chord: f64) -> Self {
-        let quarter_chord = Vector3D::new(
-            0.25 * chord,
+    pub fn new(p1: Vector3D, p2: Vector3D, chord: f64, count: usize) -> Self {
+        // Floating-point equivalent of `count`
+        let n = count as f64;
+
+        // Chord (plus vector direction) of a single vortex panel
+        let chord_vector = Vector3D::new(
+            chord / n,
             0.0,
             0.0,
         );
 
-        // Vortex with circulation of one (will be changed later)
-        let vortex = VortexPanel::new(
-            p1 + quarter_chord,
-            p2 + quarter_chord,
+        // Center of leading edge
+        let center = p1 + (p2 - p1).scale(0.5);
+
+        // Normal vector of section
+        let downstream = Vector3D::new(
             1.0,
+            0.0,
+            0.0,
         );
+        let normal = downstream.cross(p2 - p1).normalize();
 
-        // Boundary condition location (three-quarters chord from center)
-        let boundary_condition = p1 + (p2 - p1).scale(0.5) + quarter_chord.scale(3.0);
+        // Lists of vortices and BCs
+        let mut vortices = Vec::new();
+        let mut boundary_conditions = Vec::new();
+
+        for i in 0..count {
+            // Vortex at this chordwise position (with unit circulation)
+            let vortex = VortexPanel::new(
+                p1 + chord_vector.scale(0.25 + (i as f64) * n),
+                p2 + chord_vector.scale(0.25 + (i as f64) * n),
+                1.0,
+            );
+
+            // Boundary condition at this location (three-quarters chord)
+            let boundary_condition = center + chord_vector.scale(0.75 + (i as f64) * n);
+
+            vortices.push(vortex);
+            boundary_conditions.push(boundary_condition);
+        }
 
         Self {
             p1,
             p2,
-            vortex,
-            normal: Vector3D::new(0.0, 0.0, 1.0),
-            boundary_condition,
+            center,
+            vortices,
+            boundary_conditions,
+            normal,
             chord,
         }
     }
@@ -76,15 +100,11 @@ impl Section {
     /// Display a Pythonic representation of this section.
     pub fn py_repr(&self) -> String {
         format!(
-            "Section(p1={}, p2={}, chord={})",
+            "Section(p1={}, p2={}, chord={}, count={})",
             self.p1.py_repr(),
             self.p2.py_repr(),
             self.chord,
+            self.vortices.len(),
         )
-    }
-
-    /// Calculate the induced flow of this section at a given point.
-    pub fn induced_flow(&self, point: Vector3D) -> Vector3D {
-        self.vortex.induced_flow(point)
     }
 }

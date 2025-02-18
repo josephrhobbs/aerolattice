@@ -20,20 +20,20 @@ p10 = al.Vector3D(0, 4, 0)
 p11 = al.Vector3D(0, 5, 0)
 
 # Create sections
-section1 = al.Section(p1, p2,    chord=0.5 )
-section2 = al.Section(p2, p3,    chord=0.8 )
-section3 = al.Section(p3, p4,    chord=1.2 )
-section4 = al.Section(p4, p5,    chord=1.2 )
-section5 = al.Section(p5, p6,    chord=1.2 )
-section6 = al.Section(p6, p7,    chord=1.2 )
-section7 = al.Section(p7, p8,    chord=1.2 )
-section8 = al.Section(p8, p9,    chord=1.2 )
-section9 = al.Section(p9, p10,   chord=0.8 )
-section10 = al.Section(p10, p11, chord=0.5 )
+section1 = al.Section(p1, p2,    chord=0.5, count=2 )
+section2 = al.Section(p2, p3,    chord=0.8, count=2 )
+section3 = al.Section(p3, p4,    chord=1.2, count=2 )
+section4 = al.Section(p4, p5,    chord=1.2, count=2 )
+section5 = al.Section(p5, p6,    chord=1.2, count=2 )
+section6 = al.Section(p6, p7,    chord=1.2, count=2 )
+section7 = al.Section(p7, p8,    chord=1.2, count=2 )
+section8 = al.Section(p8, p9,    chord=1.2, count=2 )
+section9 = al.Section(p9, p10,   chord=0.8, count=2 )
+section10 = al.Section(p10, p11, chord=0.5, count=2 )
 
 # Create airframe
 airframe = al.Airframe(
-    aoa=1,
+    aoa=2,
     sideslip=0,
     sections=[
         section1,
@@ -51,9 +51,11 @@ airframe = al.Airframe(
 
 # Solve airframe
 lift_distr = airframe.lift_distr()
-
-print(lift_distr)
+lift_coeff = airframe.lift_coeff()
 
 plt.plot(*lift_distr, label="c CL")
-
+plt.plot(*lift_coeff, label="CL")
+plt.legend()
+plt.xlabel("Spanwise (m)")
+plt.ylabel("Sectional Lift")
 plt.show()
