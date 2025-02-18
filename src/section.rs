@@ -24,8 +24,8 @@ pub struct Section {
     /// Normal vector.
     pub normal: Vector3D,
 
-    /// Angle of attack (radians).
-    pub aoa: f64,
+    /// Incidence angle (radians).
+    pub incidence: f64,
 
     /// Span-wise dimension of this section.
     pub span: f64,
@@ -39,7 +39,7 @@ pub struct Section {
 
 impl Section {
     /// Construct a new airframe section.
-    pub fn new(p1: Vector3D, p2: Vector3D, chord: f64, aoa: f64, count: usize) -> Self {
+    pub fn new(p1: Vector3D, p2: Vector3D, chord: f64, incidence: f64, count: usize) -> Self {
         // Floating-point equivalent of `count`
         let n = count as f64;
 
@@ -86,7 +86,7 @@ impl Section {
             center,
             vortices,
             boundary_conditions,
-            aoa,
+            incidence,
             normal,
             span,
             chord,

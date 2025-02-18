@@ -20,8 +20,8 @@ pub struct Rib {
     /// Wing chord at this location.
     pub chord: f64,
 
-    /// Angle of attack (radians).
-    pub aoa: f64,
+    /// Angle of incidence (radians).
+    pub incidence: f64,
 }
 
 #[pymethods]
@@ -29,12 +29,12 @@ impl Rib {
     #[new]
     /// Construct a new aircraft rib.
     /// 
-    /// *Note* that the angle of attack function parameter must be in *degrees*.
-    pub fn new(p: Vector3D, chord: f64, aoa: f64) -> Self {
+    /// *Note* that the incidence angle parameter must be in *degrees*.
+    pub fn new(p: Vector3D, chord: f64, incidence: f64) -> Self {
         Self {
             p,
             chord,
-            aoa: aoa.to_radians(),
+            incidence: incidence.to_radians(),
         }
     }
 
@@ -42,9 +42,10 @@ impl Rib {
     /// Display a Pythonic representation of this rib.
     pub fn py_repr(&self) -> String {
         format!(
-            "Rib(p={}, chord={})",
+            "Rib(p={}, chord={}, incidence={})",
             self.p.py_repr(),
             self.chord,
+            self.incidence,
         )
     }
 }

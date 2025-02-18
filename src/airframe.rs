@@ -4,7 +4,10 @@
 //! The AeroLattice program is designed to perform inviscid fluid flow computations
 //! using this data structure.
 
-use pyo3::prelude::*;
+use pyo3::{
+    prelude::*,
+    exceptions::PyValueError,
+};
 
 use crate::{
     Rib,
@@ -41,23 +44,25 @@ pub struct Airframe {
 #[pymethods]
 impl Airframe {
     #[new]
+    #[pyo3(signature=(c_ref, s_ref, ribs, span_count=30, chord_count=10))]
     /// Construct a new airframe from two or more ribs.
-    /// 
-    /// Note that AoA and sideslip should be set in *degrees*.
     pub fn new(
-        aoa: f64,
-        sideslip: f64,
         c_ref: f64,
         s_ref: f64,
+        ribs: Vec<Rib>,
         span_count: usize,
         chord_count: usize,
-        ribs: Vec<Rib>,
-    ) -> Self {
+    ) -> PyResult<Self> {
         // List of sections (built using ribs)
         let mut sections = Vec::new();
 
         // Number of span-wise vortices per section
         let s = span_count / (ribs.len() - 1);
+
+        // We need at least two ribs
+        if ribs.len() < 2 {
+            return Err (PyValueError::new_err("two or more airframe ribs are required"));
+        }
 
         for i in 0..(ribs.len() - 1) {
             let r1 = ribs[i];
@@ -66,8 +71,8 @@ impl Airframe {
             // Function to linearly interpolate chord between R1 and R2
             let interp_chord = |j: f64| r1.chord + (r2.chord - r1.chord) * j / (s as f64);
 
-            // Function to linearly interpolate angle of attack between R1 and R2
-            let interp_aoa =   |j: f64| r1.aoa + (r2.aoa - r1.aoa) * j / (s as f64);
+            // Function to linearly interpolate incidence angle between R1 and R2
+            let interp_aoa =   |j: f64| r1.incidence + (r2.incidence - r1.incidence) * j / (s as f64);
 
             for j in 0..s {
                 // Construct P1 and P2 for this section
@@ -87,13 +92,13 @@ impl Airframe {
             }
         }
 
-        Self {
-            aoa: aoa.to_radians(),
-            sideslip: sideslip.to_radians(),
+        Ok (Self {
+            aoa: 0.0,
+            sideslip: 0.0,
             c_ref,
             s_ref,
             sections,
-        }
+        })
     }
 
     #[getter]
@@ -154,7 +159,7 @@ impl Airframe {
         for s in &self.sections {
             chords.push(s.chord);
             spans.push(s.span);
-            angles.push(self.aoa + s.aoa);
+            angles.push(self.aoa + s.incidence);
         }
 
         Solution::new(
@@ -208,7 +213,7 @@ impl Airframe {
                 // ...evaluate the dot product between the freestream and its section's normal
 
                 // Local angle of attack
-                let local_aoa = self.aoa + self.sections[i].aoa;
+                let local_aoa = self.aoa + self.sections[i].incidence;
 
                 let local_freestream = Vector3D::new(
                     self.sideslip.cos() * local_aoa.cos(),
