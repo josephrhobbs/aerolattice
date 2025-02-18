@@ -9,6 +9,7 @@ use pyo3::prelude::*;
 use crate::{
     Rib,
     Section,
+    Solution,
     Matrix,
     Vector,
     Vector3D,
@@ -144,67 +145,26 @@ impl Airframe {
         output
     }
 
-    /// Solve for the mean aerodynamic chord of this airframe.
-    pub fn mac(&self) -> f64 {
-        let mut total = 0.0;
+    /// Construct a Python-compatible solution structure.
+    pub fn solve(&self) -> Solution {
+        let mut chords = Vec::new();
+        let mut spans = Vec::new();
+        let mut angles = Vec::new();
 
         for s in &self.sections {
-            total += s.chord;
+            chords.push(s.chord);
+            spans.push(s.span);
+            angles.push(self.aoa + s.aoa);
         }
 
-        total / (self.sections.len() as f64)
-    }
-
-    /// Solve for the CL of this airframe.
-    pub fn cl(&self) -> f64 {
-        // Total lift force, normalized by dynamic pressure
-        let mut force = 0.0;
-
-        // Lift distribution (c CL)
-        let lift = self.vorticity_distr().scale(2.0).values;
-
-        for i in 0..lift.len() {
-            force += lift[i] * self.sections[i].span;
-        }
-
-        force / self.s_ref
-    }
-
-    /// Solve for the CD of this airframe.
-    pub fn cd(&self) -> f64 {
-        // Total lift force, normalized by dynamic pressure
-        let mut force = 0.0;
-
-        // Lift distribution (c CL)
-        let lift = self.vorticity_distr().scale(2.0).values;
-
-        for i in 0..lift.len() {
-            force += lift[i] * self.sections[i].span * self.sections[i].aoa;
-        }
-
-        force / self.s_ref
-    }
-
-    /// Solve for the lift coefficient distribution on this airframe.
-    /// 
-    /// This function returns (non-dimensionalized) lift coefficients.
-    pub fn cl_distr(&self) -> (Vec<f64>, Vec<f64>) {
-        // Raw values, these need to be normalized by chord length
-        let mut output = self.vorticity_distr().scale(2.0).values;
-
-        for i in 0..output.len() {
-            // Non-dimensionalize by chord
-            output[i] /= self.sections[i].chord;
-        }
-
-        (self.spanwise_coords().values, output)
-    }
-
-    /// Solve for the sectional lift distribution on this airframe.
-    /// 
-    /// This function returns lift per unit span.
-    pub fn lift_distr(&self) -> (Vec<f64>, Vec<f64>) {
-        (self.spanwise_coords().values, self.vorticity_distr().scale(2.0).values)
+        Solution::new(
+            self.spanwise_coords(),
+            Vector::new(chords),
+            Vector::new(spans),
+            Vector::new(angles),
+            self.vorticity_distr(),
+            self.s_ref,
+        )
     }
 }
 

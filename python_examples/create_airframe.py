@@ -41,7 +41,7 @@ airframe = al.Airframe(
     sideslip=0,
     c_ref=1,
     s_ref=10,
-    span_count=40,
+    span_count=20,
     chord_count=10,
     ribs=[
         r1,
@@ -58,11 +58,9 @@ for i, a in enumerate(angles):
     airframe.aoa = a
 
     # Solve airframe
-    lift = airframe.lift_distr()
+    solution = airframe.solve()
 
-    lifts.append(lift)
-
-    print(lift)
+    lifts.append(solution.lift_distr)
 
 for a, l in zip(angles, lifts):
     plt.plot(*l, label=f"AoA = {a} deg")
