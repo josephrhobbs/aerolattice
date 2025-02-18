@@ -4,23 +4,14 @@
 //! The AeroLattice program represents a section as one or more horseshoe vortices
 //! shed downstream from the section.
 
-use pyo3::prelude::*;
-
 use crate::{
     Vector3D,
     VortexPanel,
 };
 
-#[pyclass]
 #[derive(Clone, Debug)]
 /// An airframe section represented by one or more horseshoe vortices.
 pub struct Section {
-    /// Leading edge P1.
-    p1: Vector3D,
-
-    /// Leading edge P2.
-    p2: Vector3D,
-
     /// Center of leading edge.
     pub center: Vector3D,
 
@@ -33,6 +24,9 @@ pub struct Section {
     /// Normal vector.
     pub normal: Vector3D,
 
+    /// Span-wise dimension of this section.
+    pub span: f64,
+
     /// Chord-wise dimension of this section.
     /// 
     /// Note that multiple vortex panels may be used in the chord-wise
@@ -40,9 +34,7 @@ pub struct Section {
     pub chord: f64,
 }
 
-#[pymethods]
 impl Section {
-    #[new]
     /// Construct a new airframe section.
     pub fn new(p1: Vector3D, p2: Vector3D, chord: f64, count: usize) -> Self {
         // Floating-point equivalent of `count`
@@ -85,26 +77,15 @@ impl Section {
             boundary_conditions.push(boundary_condition);
         }
 
+        let span = (p2 - p1).y;
+
         Self {
-            p1,
-            p2,
             center,
             vortices,
             boundary_conditions,
             normal,
+            span,
             chord,
         }
-    }
-
-    #[pyo3(name = "__repr__")]
-    /// Display a Pythonic representation of this section.
-    pub fn py_repr(&self) -> String {
-        format!(
-            "Section(p1={}, p2={}, chord={}, count={})",
-            self.p1.py_repr(),
-            self.p2.py_repr(),
-            self.chord,
-            self.vortices.len(),
-        )
     }
 }

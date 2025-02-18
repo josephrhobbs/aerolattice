@@ -8,36 +8,37 @@
 
 use pyo3::prelude::*;
 
-use crate::{
-    Section,
-    Vector3D,
-};
+use crate::Vector3D;
 
 #[pyclass]
-#[derive(Clone, Debug)]
+#[derive(Clone, Copy, Debug)]
 /// An airframe rib represented by one or more span-wise sections.
 pub struct Rib {
-    /// Leading edge P1.
-    p1: Vector3D,
+    /// Leading edge point.
+    pub p: Vector3D,
 
-    /// Leading edge P2.
-    p2: Vector3D,
-
-    /// Center of leading edge.
-    pub center: Vector3D,
-
-    /// Horseshoe vortex panels.
-    pub sections: Vec<VortexPanel>,
-
-    /// Boundary condition locations.
-    pub boundary_conditions: Vec<Vector3D>,
-
-    /// Normal vector.
-    pub normal: Vector3D,
-
-    /// Chord-wise dimension of this section.
-    /// 
-    /// Note that multiple vortex panels may be used in the chord-wise
-    /// direction on a single section to create a higher-fidelity simulation.
+    /// Wing chord at this location.
     pub chord: f64,
+}
+
+#[pymethods]
+impl Rib {
+    #[new]
+    /// Construct a new aircraft rib.
+    pub fn new(p: Vector3D, chord: f64) -> Self {
+        Self {
+            p,
+            chord,
+        }
+    }
+
+    #[pyo3(name = "__repr__")]
+    /// Display a Pythonic representation of this rib.
+    pub fn py_repr(&self) -> String {
+        format!(
+            "Rib(p={}, chord={})",
+            self.p.py_repr(),
+            self.chord,
+        )
+    }
 }
