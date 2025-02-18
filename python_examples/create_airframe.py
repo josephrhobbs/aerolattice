@@ -10,35 +10,33 @@ from matplotlib import pyplot as plt
 r1 = al.Rib(
     al.Vector3D(2, -5, 2),
     chord=0.5,
-    aoa=0,
+    incidence=0,
 )
 r2 = al.Rib(
     al.Vector3D(1, -4, 1),
     chord=1,
-    aoa=0,
+    incidence=0,
 )
 r3 = al.Rib(
     al.Vector3D(0, 0, 0),
     chord=1,
-    aoa=0,
+    incidence=0,
 )
 r4 = al.Rib(
     al.Vector3D(1, 4, 1),
     chord=1,
-    aoa=0,
+    incidence=0,
 )
 r5 = al.Rib(
     al.Vector3D(2, 5, 2),
     chord=0.5,
-    aoa=0,
+    incidence=0,
 )
 
 angles = [-2, -1, 0, 1, 2, 3, 4]
 
 # Create airframe
 airframe = al.Airframe(
-    aoa=0,
-    sideslip=0,
     c_ref=1,
     s_ref=10,
     span_count=20,
