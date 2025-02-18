@@ -18,13 +18,18 @@ use crate::{
 #[derive(Clone, Debug)]
 /// A lattice of sections representing an aircraft geometry.
 pub struct Airframe {
-    /// Freestream velocity vector.
-    freestream: Vector3D,
+    /// Angle of attack (radians).
+    aoa: f64,
+
+    /// Sideslip (radians).
+    sideslip: f64,
 
     #[allow(dead_code)]
+    #[pyo3(get, set)]
     /// Reference chord.
     c_ref: f64,
 
+    #[pyo3(get, set)]
     /// Reference planform area.
     s_ref: f64,
 
@@ -47,12 +52,6 @@ impl Airframe {
         chord_count: usize,
         ribs: Vec<Rib>,
     ) -> Self {
-        let freestream = Vector3D::new(
-            sideslip.to_radians().cos() * aoa.to_radians().cos(),
-            -sideslip.to_radians().sin() * aoa.to_radians().cos(),
-            aoa.to_radians().sin(),
-        );
-
         // List of sections (built using ribs)
         let mut sections = Vec::new();
 
@@ -66,6 +65,9 @@ impl Airframe {
             // Function to linearly interpolate chord between R1 and R2
             let interp_chord = |j: f64| r1.chord + (r2.chord - r1.chord) * j / (s as f64);
 
+            // Function to linearly interpolate angle of attack between R1 and R2
+            let interp_aoa =   |j: f64| r1.aoa + (r2.aoa - r1.aoa) * j / (s as f64);
+
             for j in 0..s {
                 // Construct P1 and P2 for this section
                 let p1 = r1.p + (r2.p - r1.p).scale((j as f64) / (s as f64));
@@ -76,6 +78,7 @@ impl Airframe {
                     p1,
                     p2,
                     interp_chord((j as f64) + 0.5),
+                    interp_aoa((j as f64) + 0.5),
                     chord_count,
                 );
 
@@ -84,18 +87,52 @@ impl Airframe {
         }
 
         Self {
-            freestream,
+            aoa: aoa.to_radians(),
+            sideslip: sideslip.to_radians(),
             c_ref,
             s_ref,
             sections,
         }
     }
 
+    #[getter]
+    /// Get the angle of attack in degrees.
+    pub fn get_aoa(&self) -> f64 {
+        self.aoa.to_degrees()
+    }
+
+    #[getter]
+    /// Get the sideslip in degrees.
+    pub fn get_sideslip(&self) -> f64 {
+        self.sideslip.to_degrees()
+    }
+
+    #[setter]
+    /// Set the angle of attack in degrees.
+    pub fn set_aoa(&mut self, aoa_deg: f64) {
+        self.aoa = aoa_deg.to_radians();
+    }
+
+    #[setter]
+    /// Set the sideslip in degrees.
+    pub fn set_sideslip(&mut self, sideslip_deg: f64) {
+        self.sideslip = sideslip_deg.to_radians();
+    }
+
+    /// Determine the freestream velocity vector.
+    pub fn freestream(&self) -> Vector3D {
+        Vector3D::new(
+            self.sideslip.cos() * self.aoa.cos(),
+            -self.sideslip.sin() * self.aoa.cos(),
+            self.aoa.sin(),
+        )
+    }
+
     /// Determine total flow at a given point, including vorticity
     ///     effects as well as freestream effects.
     pub fn flow(&self, point: Vector3D) -> Vector3D {
         // Create new output velocity vector
-        let mut output = self.freestream;
+        let mut output = self.freestream();
 
         // Account for each section
         for section in &self.sections {
@@ -128,6 +165,21 @@ impl Airframe {
 
         for i in 0..lift.len() {
             force += lift[i] * self.sections[i].span;
+        }
+
+        force / self.s_ref
+    }
+
+    /// Solve for the CD of this airframe.
+    pub fn cd(&self) -> f64 {
+        // Total lift force, normalized by dynamic pressure
+        let mut force = 0.0;
+
+        // Lift distribution (c CL)
+        let lift = self.vorticity_distr().scale(2.0).values;
+
+        for i in 0..lift.len() {
+            force += lift[i] * self.sections[i].span * self.sections[i].aoa;
         }
 
         force / self.s_ref
@@ -171,10 +223,10 @@ impl Airframe {
                     for n in 0..self.sections[m].vortices.len() {
                         // Contribution from section `m`, panel `n` towards downwash on section `i`, panel `j`
                         let contribution = self.sections[m].vortices[n].induced_flow(self.sections[i].boundary_conditions[j]);
-    
+
                         // Evaluate normalwash
                         let normalwash = contribution.dot(self.sections[i].normal);
-    
+
                         row.push(normalwash);
                     }
                 }
@@ -194,7 +246,18 @@ impl Airframe {
         for i in 0..self.sections.len() {
             for _ in 0..self.sections[i].vortices.len() {
                 // ...evaluate the dot product between the freestream and its section's normal
-                let component = self.freestream.dot(self.sections[i].normal);
+
+                // Local angle of attack
+                let local_aoa = self.aoa + self.sections[i].aoa;
+
+                let local_freestream = Vector3D::new(
+                    self.sideslip.cos() * local_aoa.cos(),
+                    -self.sideslip.sin() * local_aoa.cos(),
+                    self.aoa.sin(),
+                );
+
+                // Component of local freestream in direction of normal
+                let component = local_freestream.dot(self.sections[i].normal);
 
                 // We negate this because it's supposed to be added to the other velocities
                 // calculated above, but this is on the other side of the equation
@@ -217,7 +280,7 @@ impl Airframe {
     }
 
     /// Solve this airframe, returning the vorticity distribution.
-    fn vorticity_distr(&self) -> Vector {
+    fn vorticity_distr(&self) -> Vector {       
         // Raw values, these need to be aggregated by chord-wise coordinate
         let raw_values = self.normalwash_matrix().inverse() * self.freestream_vector();
 

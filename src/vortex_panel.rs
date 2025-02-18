@@ -100,7 +100,9 @@ impl VortexPanel {
         let to_left_filament = (self.p1 - projected_p0).normalize();
 
         // Angle
-        let angle2 = PI/2.0 + to_left_filament.dot(to_p1).acos();
+        // Note: floating-point precision can make this slightly larger (1e-10) than one,
+        // but this breaks f64::acos() so we use f64::min()
+        let angle2 = PI/2.0 + to_left_filament.dot(to_p1).min(1.0).acos();
 
         // Contribution of left filament
         let contribution_left = -self.circulation / 4.0 / PI / r_left * (1.0 - angle2.cos());
@@ -109,7 +111,7 @@ impl VortexPanel {
         // RIGHT FILAMENT (P2 -> INFTY)
 
         // Distance from given point to right filament
-        let r_left = ((p0.y - self.p2.y).powi(2) + (p0.z - self.p2.z).powi(2)).sqrt();
+        let r_right = ((p0.y - self.p2.y).powi(2) + (p0.z - self.p2.z).powi(2)).sqrt();
 
         // Direction to closest point
         let projected_p0 = Vector3D::new(
@@ -120,10 +122,12 @@ impl VortexPanel {
         let to_right_filament = (self.p2 - projected_p0).normalize();
 
         // Angle
-        let angle1 = PI/2.0 + to_right_filament.dot(to_p2).acos();
+        // Note: floating-point precision can make this slightly larger (1e-10) than one,
+        // but this breaks f64::acos() so we use f64::min()
+        let angle1 = PI/2.0 + to_right_filament.dot(to_p2).min(1.0).acos();
 
         // Contribution of right filament
-        let contribution_right = -self.circulation / 4.0 / PI / r_left * (1.0 - angle1.cos());
+        let contribution_right = -self.circulation / 4.0 / PI / r_right * (1.0 - angle1.cos());
         let v3 = downstream.cross(to_right_filament).normalize().scale(contribution_right);
 
         v1 + v2 + v3

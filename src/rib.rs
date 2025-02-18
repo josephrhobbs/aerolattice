@@ -19,16 +19,22 @@ pub struct Rib {
 
     /// Wing chord at this location.
     pub chord: f64,
+
+    /// Angle of attack (radians).
+    pub aoa: f64,
 }
 
 #[pymethods]
 impl Rib {
     #[new]
     /// Construct a new aircraft rib.
-    pub fn new(p: Vector3D, chord: f64) -> Self {
+    /// 
+    /// *Note* that the angle of attack function parameter must be in *degrees*.
+    pub fn new(p: Vector3D, chord: f64, aoa: f64) -> Self {
         Self {
             p,
             chord,
+            aoa: aoa.to_radians(),
         }
     }
 

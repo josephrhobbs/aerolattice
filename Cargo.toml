@@ -2,7 +2,7 @@
 name = "aerolattice"
 description = "A blazingly fast aerodynamics package built for modern aerospace applications."
 repository = "https://github.com/josephrhobbs/aerolattice.git"
-version = "0.7.0"
+version = "0.8.0"
 edition = "2021"
 license = "MIT"
 
