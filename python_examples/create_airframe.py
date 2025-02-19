@@ -8,62 +8,36 @@ from matplotlib import pyplot as plt
 
 # Create ribs
 r1 = al.Rib(
-    al.Vector3D(2, -5, 2),
-    chord=0.5,
+    al.Vector3D(0, -5, 0),
+    chord=1,
     incidence=0,
 )
 r2 = al.Rib(
-    al.Vector3D(1, -4, 1),
+    al.Vector3D(0, 5, 0),
     chord=1,
     incidence=0,
 )
-r3 = al.Rib(
-    al.Vector3D(0, 0, 0),
-    chord=1,
-    incidence=0,
-)
-r4 = al.Rib(
-    al.Vector3D(1, 4, 1),
-    chord=1,
-    incidence=0,
-)
-r5 = al.Rib(
-    al.Vector3D(2, 5, 2),
-    chord=0.5,
-    incidence=0,
-)
-
-angles = [-2, -1, 0, 1, 2, 3, 4]
 
 # Create airframe
 airframe = al.Airframe(
     c_ref=1,
     s_ref=10,
-    span_count=20,
-    chord_count=10,
+    span_count=30,
+    chord_count=15,
     ribs=[
         r1,
         r2,
-        r3,
-        r4,
-        r5,
     ]
 )
+airframe.aoa = 4
 
-lifts = []
+sol = airframe.solve()
 
-for i, a in enumerate(angles):
-    airframe.aoa = a
+lift = sol.lift_distr
 
-    # Solve airframe
-    solution = airframe.solve()
+print(f"CL  = {sol.cl}\nCDi = {sol.cdi}")
 
-    lifts.append(solution.lift_distr)
-
-for a, l in zip(angles, lifts):
-    plt.plot(*l, label=f"AoA = {a} deg")
-
-plt.legend()
+plt.plot(*lift)
 plt.xlabel("Spanwise (m)")
 plt.ylabel("Sectional Lift")
 plt.show()

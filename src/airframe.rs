@@ -154,20 +154,29 @@ impl Airframe {
     pub fn solve(&self) -> Solution {
         let mut chords = Vec::new();
         let mut spans = Vec::new();
-        let mut angles = Vec::new();
+        let mut induced_angles = Vec::new();
+        let mut normals = Vec::new();
 
-        for s in &self.sections {
+        // We need to flip the sign because it was flipped before
+        let freestream_vector = self.freestream_vector().scale(-1.0);
+
+        for i in 0..self.sections.len() {
+            let s = &self.sections[i];
+
             chords.push(s.chord);
             spans.push(s.span);
-            angles.push(self.aoa + s.incidence);
+            induced_angles.push(freestream_vector[i].atan());
+            normals.push(s.normal);
         }
 
         Solution::new(
             self.spanwise_coords(),
             Vector::new(chords),
             Vector::new(spans),
-            Vector::new(angles),
+            Vector::new(induced_angles),
             self.vorticity_distr(),
+            normals,
+            self.aoa,
             self.s_ref,
         )
     }
@@ -218,7 +227,7 @@ impl Airframe {
                 let local_freestream = Vector3D::new(
                     self.sideslip.cos() * local_aoa.cos(),
                     -self.sideslip.sin() * local_aoa.cos(),
-                    self.aoa.sin(),
+                    local_aoa.sin(),
                 );
 
                 // Component of local freestream in direction of normal

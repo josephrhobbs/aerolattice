@@ -6,7 +6,10 @@
 
 use pyo3::prelude::*;
 
-use crate::Vector;
+use crate::{
+    Vector,
+    Vector3D,
+};
 
 #[pyclass]
 pub struct Solution {
@@ -22,8 +25,14 @@ pub struct Solution {
     /// Local chord lengths.
     chords: Vector,
 
-    /// Local angles of attack.
-    angles: Vector,
+    /// Local induced angles of attack (radians).
+    induced_angles: Vector,
+
+    /// Local normal vectors.
+    normals: Vec<Vector3D>,
+
+    /// Overall angle of attack (radians).
+    aoa: f64,
 
     /// Circulation strengths.
     circulations: Vector,
@@ -53,7 +62,17 @@ impl Solution {
         let lift = self.circulations.scale(2.0).values;
 
         for i in 0..lift.len() {
-            force += lift[i] * self.spans[i];
+            // Local vector perpendicular to flow
+            let perpendicular = Vector3D::new(
+                -self.aoa.sin(),
+                0.0,
+                self.aoa.cos(),
+            );
+
+            // Cosine of angle between normal and perpendicular vector
+            let cos_angle = self.normals[i].dot(perpendicular);
+
+            force += lift[i] * self.spans[i] * self.induced_angles[i].cos() * cos_angle;
         }
 
         force / self.s_ref
@@ -69,7 +88,17 @@ impl Solution {
         let lift = self.circulations.scale(2.0).values;
 
         for i in 0..lift.len() {
-            force += lift[i] * self.spans[i] * self.angles[i];
+            // Local vector parallel to flow
+            let parallel = Vector3D::new(
+                self.aoa.cos(),
+                0.0,
+                self.aoa.sin(),
+            );
+
+            // Cosine of angle between normal and parallel vector
+            let cos_angle = self.normals[i].dot(parallel);
+    
+            force += lift[i] * self.spans[i] * self.induced_angles[i].sin() * cos_angle;
         }
 
         force / self.s_ref
@@ -102,13 +131,24 @@ impl Solution {
 
 impl Solution {
     /// Construct a new solution.
-    pub fn new(coordinates: Vector, chords: Vector, spans: Vector, angles: Vector, circulations: Vector, s_ref: f64) -> Self {
+    pub fn new(
+        coordinates: Vector,
+        chords: Vector,
+        spans: Vector,
+        induced_angles: Vector,
+        circulations: Vector,
+        normals: Vec<Vector3D>,
+        aoa: f64,
+        s_ref: f64,
+    ) -> Self {
         Self {
             coordinates,
             chords,
             spans,
-            angles,
+            induced_angles,
             circulations,
+            normals,
+            aoa,
             s_ref,
         }
     }
