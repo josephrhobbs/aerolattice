@@ -34,10 +34,13 @@ airframe.aoa = 4
 sol = airframe.solve()
 
 lift = sol.lift_distr
+cl   = sol.cl_distr
 
 print(f"CL  = {sol.cl}\nCDi = {sol.cdi}")
 
-plt.plot(*lift)
+plt.plot(*lift, label="c cl")
+plt.plot(*cl, label="cl")
+plt.legend()
 plt.xlabel("Spanwise (m)")
 plt.ylabel("Sectional Lift")
 plt.show()

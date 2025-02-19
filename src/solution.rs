@@ -87,18 +87,8 @@ impl Solution {
         // Lift distribution (c CL)
         let lift = self.circulations.scale(2.0).values;
 
-        for i in 0..lift.len() {
-            // Local vector parallel to flow
-            let parallel = Vector3D::new(
-                self.aoa.cos(),
-                0.0,
-                self.aoa.sin(),
-            );
-
-            // Cosine of angle between normal and parallel vector
-            let cos_angle = self.normals[i].dot(parallel);
-    
-            force += lift[i] * self.spans[i] * self.induced_angles[i].sin() * cos_angle;
+        for i in 0..lift.len() {   
+            force += lift[i] * self.spans[i] * self.induced_angles[i].sin();
         }
 
         force / self.s_ref
