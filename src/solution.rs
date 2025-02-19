@@ -58,7 +58,7 @@ impl Solution {
         // Total lift force, normalized by dynamic pressure
         let mut force = 0.0;
 
-        // Lift distribution (c CL)
+        // Lift distribution (c cl)
         let lift = self.circulations.scale(2.0).values;
 
         for i in 0..lift.len() {
@@ -84,7 +84,7 @@ impl Solution {
         // Total lift force, normalized by dynamic pressure
         let mut force = 0.0;
 
-        // Lift distribution (c CL)
+        // Lift distribution (c cl)
         let lift = self.circulations.scale(2.0).values;
 
         for i in 0..lift.len() {   
