@@ -154,18 +154,25 @@ impl Airframe {
     pub fn solve(&self) -> Solution {
         let mut chords = Vec::new();
         let mut spans = Vec::new();
-        let mut induced_angles = Vec::new();
         let mut normals = Vec::new();
 
-        // We need to flip the sign because it was flipped before
-        let freestream_vector = self.freestream_vector().scale(-1.0);
+        // Calculate the inverse normalwash matrix
+        let inverse_normalwash_matrix = self.normalwash_matrix().inverse();
+
+        // Calculate the freestream vector
+        let freestream_vector = self.freestream_vector();
+
+        // Calculate the vorticity distribution
+        let vorticity_distr = self.vorticity_distr(&inverse_normalwash_matrix, &freestream_vector);
+        
+        // Calculate the induced AoA distribution
+        let induced_angles_distr = self.induced_angles_distr(&inverse_normalwash_matrix, &freestream_vector);
 
         for i in 0..self.sections.len() {
             let s = &self.sections[i];
 
             chords.push(s.chord);
             spans.push(s.span);
-            induced_angles.push(freestream_vector[i].atan());
             normals.push(s.normal);
         }
 
@@ -173,8 +180,8 @@ impl Airframe {
             self.spanwise_coords(),
             Vector::new(chords),
             Vector::new(spans),
-            Vector::new(induced_angles),
-            self.vorticity_distr(),
+            induced_angles_distr,
+            vorticity_distr,
             normals,
             self.aoa,
             self.s_ref,
@@ -197,6 +204,35 @@ impl Airframe {
                     for n in 0..self.sections[m].vortices.len() {
                         // Contribution from section `m`, panel `n` towards downwash on section `i`, panel `j`
                         let contribution = self.sections[m].vortices[n].induced_flow(self.sections[i].boundary_conditions[j]);
+
+                        // Evaluate normalwash
+                        let normalwash = contribution.dot(self.sections[i].normal);
+
+                        row.push(normalwash);
+                    }
+                }
+    
+                matrix.push(row);
+            }
+        }
+
+        Matrix::new(matrix)
+    }
+
+    /// Build the normalwash matrix, neglecting bound vorticity, for this airframe.
+    fn trailing_normalwash_matrix(&self) -> Matrix {
+        let mut matrix = Vec::new();
+
+        // For each vortex panel...
+        for i in 0..self.sections.len() {
+            for j in 0..self.sections[i].vortices.len() {
+                // ...evaluate every other panel's contribution to its own normalwash (neglecting the bound vortex)
+                let mut row = Vec::new();
+
+                for m in 0..self.sections.len() {
+                    for n in 0..self.sections[m].vortices.len() {
+                        // Contribution from section `m`, panel `n` towards downwash on section `i`, panel `j`
+                        let contribution = self.sections[m].vortices[n].downwash_flow(self.sections[i].boundary_conditions[j]);
 
                         // Evaluate normalwash
                         let normalwash = contribution.dot(self.sections[i].normal);
@@ -242,6 +278,32 @@ impl Airframe {
         Vector::new(vector)
     }
 
+    /// Build the induced angle of attack vector for this airframe.
+    fn induced_angles_distr(&self, inverse_normalwash_matrix: &Matrix, freestream_vector: &Vector) -> Vector {       
+        // Compute resultant downwash values
+        let result = self.trailing_normalwash_matrix() * inverse_normalwash_matrix.clone() * freestream_vector.clone();
+
+        let mut output = vec![0.0; self.sections.len()];
+
+        let mut idx = 0;
+
+        for i in 0..self.sections.len() {
+            // Chord-wise step... we need to average the downwash
+            let c = self.sections[i].chord / (self.sections[i].vortices.len() as f64);
+
+            for _ in 0..self.sections[i].vortices.len() {
+                // Negative because "downwash" is defined as positive downwards
+                output[i] -= result[idx] * c;
+                idx += 1;
+            }
+
+            // Convert downwash value to induced angle of attack
+            output[i] = output[i].atan();
+        }
+
+        Vector::new(output)
+    }
+
     /// Compute the span-wise coordinates at which lift is evaluated.
     fn spanwise_coords(&self) -> Vector {
         let mut vector = Vec::new();
@@ -254,9 +316,9 @@ impl Airframe {
     }
 
     /// Solve this airframe, returning the vorticity distribution.
-    fn vorticity_distr(&self) -> Vector {       
+    fn vorticity_distr(&self, inverse_normalwash_matrix: &Matrix, freestream_vector: &Vector) -> Vector {       
         // Raw values, these need to be aggregated by chord-wise coordinate
-        let raw_values = self.normalwash_matrix().inverse() * self.freestream_vector();
+        let raw_values = inverse_normalwash_matrix.clone() * freestream_vector.clone();
 
         let mut output = vec![0.0; self.sections.len()];
 

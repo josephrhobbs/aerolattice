@@ -11,6 +11,9 @@ use crate::{
     Vector3D,
 };
 
+/// Pi.
+const PI: f64 = std::f64::consts::PI;
+
 #[pyclass]
 pub struct Solution {
     /// Span-wise coordinates.
@@ -116,6 +119,14 @@ impl Solution {
     /// This function returns lift per unit span.
     pub fn get_lift_distr(&self) -> (Vec<f64>, Vec<f64>) {
         (self.coordinates.values.clone(), self.circulations.scale(2.0).values)
+    }
+
+    #[getter]
+    /// Get the induced angle of attack on this airframe.
+    /// 
+    /// This function returns angles in degrees.
+    pub fn get_induced_angles(&self) -> (Vec<f64>, Vec<f64>) {
+        (self.coordinates.values.clone(), self.induced_angles.scale(180.0 / PI).values)
     }
 }
 

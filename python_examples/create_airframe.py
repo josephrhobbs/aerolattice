@@ -9,7 +9,7 @@ from matplotlib import pyplot as plt
 # Create ribs
 r1 = al.Rib(
     al.Vector3D(0, -5, 0),
-    chord=0.7,
+    chord=1,
     incidence=0,
 )
 r2 = al.Rib(
@@ -19,7 +19,7 @@ r2 = al.Rib(
 )
 r3 = al.Rib(
     al.Vector3D(0, 5, 0),
-    chord=0.7,
+    chord=1,
     incidence=0,
 )
 
@@ -27,7 +27,7 @@ r3 = al.Rib(
 airframe = al.Airframe(
     c_ref=1,
     s_ref=10,
-    span_count=40,
+    span_count=30,
     chord_count=10,
     ribs=[
         r1,
@@ -35,18 +35,23 @@ airframe = al.Airframe(
         r3,
     ]
 )
-airframe.aoa = 4
+airframe.aoa = 5
 
 sol = airframe.solve()
 
 lift = sol.lift_distr
 cl   = sol.cl_distr
 
-print(f"CL  = {sol.cl}\nCDi = {sol.cdi}")
+print(f"CL  = {sol.cl}")
+print(f"CDi = {sol.cdi}")
+print(f"eff = {sol.cl**2 / 11.7 / m.pi / sol.cdi}")
 
 plt.plot(*lift, label="c cl")
 plt.plot(*cl, label="cl")
+plt.plot(*sol.induced_angles, label="ai")
 plt.legend()
+
 plt.xlabel("Spanwise (m)")
 plt.ylabel("Sectional Lift")
+
 plt.show()
