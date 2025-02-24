@@ -64,32 +64,32 @@ impl Solution {
         // Total lift force, normalized by dynamic pressure
         let mut force = Vector3D::new(0.0, 0.0, 0.0);
 
-        // Lift distribution (c cl)
-        let lift = self.circulations.scale(2.0).values;
+        // Circulation values
+        let circulations = &self.circulations.values;
 
-        for i in 0..lift.len() {
+        for i in 0..circulations.len() {
             // Normal vector of this section
             let normal = self.normals[i];
 
             // Effective angle of attack (positive backwards)
             let aoa_eff: f64 = self.aoa - self.induced_angles[i];
 
-            // Force direction
+            // Force direction (rotate lift vector by effective angle of attack)
             let force_dir = Vector3D::new(
-                aoa_eff.cos() * normal.x + aoa_eff.sin() * normal.z,
+                aoa_eff.cos() * normal.x - aoa_eff.sin() * normal.z,
                 normal.y,
-                -aoa_eff.sin() * normal.x + aoa_eff.cos() * normal.z,
+                aoa_eff.sin() * normal.x + aoa_eff.cos() * normal.z,
             );
 
-            // Magnitude of force
+            // Magnitude of circulation
             // Normalized by dynamic pressure and span-wise dimension
-            let lift_magnitude = lift[i];
+            let circulation_magnitude = circulations[i];
 
             // Span-wise dimension
             let span_dim = self.spans[i];
 
             // Force contribution
-            force = force + force_dir.scale(lift_magnitude * span_dim);
+            force = force + force_dir.scale(2.0 * circulation_magnitude * span_dim);
         }
 
         force

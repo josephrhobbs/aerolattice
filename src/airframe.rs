@@ -191,6 +191,8 @@ impl Airframe {
 
 impl Airframe {
     /// Build the normalwash matrix for this airframe.
+    /// 
+    /// The elements of the normalwash matrix have units of inverse distance (velocity per unit circulation).
     fn normalwash_matrix(&self) -> Matrix {
         let mut matrix = Vec::new();
 
@@ -205,7 +207,7 @@ impl Airframe {
                         // Contribution from section `m`, panel `n` towards downwash on section `i`, panel `j`
                         let contribution = self.sections[m].vortices[n].induced_flow(self.sections[i].boundary_conditions[j]);
 
-                        // Evaluate normalwash
+                        // Evaluate normalwash (scalar) from contribution (`Vector3D`)
                         let normalwash = contribution.dot(self.sections[i].normal);
 
                         row.push(normalwash);
@@ -249,6 +251,8 @@ impl Airframe {
     }
 
     /// Build the freestream vector for this airframe.
+    /// 
+    /// The elements of the freestream vector are unitless (local velocity per unit freestream velocity).
     fn freestream_vector(&self) -> Vector {
         let mut vector = Vec::new();
 
@@ -316,6 +320,8 @@ impl Airframe {
     }
 
     /// Solve this airframe, returning the vorticity distribution.
+    /// 
+    /// The vorticity distribution has units of distance (circulation per unit freestream velocity).
     fn vorticity_distr(&self, inverse_normalwash_matrix: &Matrix, freestream_vector: &Vector) -> Vector {       
         // Raw values, these need to be aggregated by chord-wise coordinate
         let raw_values = inverse_normalwash_matrix.clone() * freestream_vector.clone();
