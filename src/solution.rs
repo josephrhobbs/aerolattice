@@ -22,6 +22,9 @@ pub struct Solution {
     /// Reference planform area.
     s_ref: f64,
 
+    /// Reference span.
+    b_ref: f64,
+
     /// Local section spanwise dimensions.
     spans: Vector,
 
@@ -53,6 +56,43 @@ impl Solution {
         }
 
         total / (self.chords.values.len() as f64)
+    }
+
+    #[getter]
+    /// Solve for the total aerodynamic force on this airframe.
+    pub fn get_aero_force(&self) -> Vector3D {
+        // Total lift force, normalized by dynamic pressure
+        let mut force = Vector3D::new(0.0, 0.0, 0.0);
+
+        // Lift distribution (c cl)
+        let lift = self.circulations.scale(2.0).values;
+
+        for i in 0..lift.len() {
+            // Normal vector of this section
+            let normal = self.normals[i];
+
+            // Effective angle of attack (positive backwards)
+            let aoa_eff: f64 = self.aoa - self.induced_angles[i];
+
+            // Force direction
+            let force_dir = Vector3D::new(
+                aoa_eff.cos() * normal.x + aoa_eff.sin() * normal.z,
+                normal.y,
+                -aoa_eff.sin() * normal.x + aoa_eff.cos() * normal.z,
+            );
+
+            // Magnitude of force
+            // Normalized by dynamic pressure and span-wise dimension
+            let lift_magnitude = lift[i];
+
+            // Span-wise dimension
+            let span_dim = self.spans[i];
+
+            // Force contribution
+            force = force + force_dir.scale(lift_magnitude * span_dim);
+        }
+
+        force
     }
 
     #[getter]
@@ -95,6 +135,21 @@ impl Solution {
         }
 
         force / self.s_ref
+    }
+
+    #[getter]
+    /// Solve for the span efficiency coefficient of this airframe.
+    pub fn get_span_eff(&self) -> f64 {
+        // Lift coefficient
+        let cl = self.get_cl();
+
+        // Induced drag coefficient
+        let cdi = self.get_cdi();
+
+        // Calculate aspect ratio
+        let ar = self.b_ref.powi(2) / self.s_ref;
+
+        cl.powi(2) / PI / cdi / ar
     }
 
     #[getter]
@@ -141,6 +196,7 @@ impl Solution {
         normals: Vec<Vector3D>,
         aoa: f64,
         s_ref: f64,
+        b_ref: f64,
     ) -> Self {
         Self {
             coordinates,
@@ -151,6 +207,7 @@ impl Solution {
             normals,
             aoa,
             s_ref,
+            b_ref,
         }
     }
 }

@@ -83,7 +83,7 @@ impl VortexPanel {
 
         // Contribution of central filament
         let contribution_central = -self.circulation / 4.0 / PI / r_central * (cos_angle1 - cos_angle2);
-        let v1 = if !contribution_central.is_nan() {
+        let v1 = if contribution_central.is_finite() && !contribution_central.is_nan() {
             (self.p2 - self.p1).cross(to_central_filament).normalize().scale(contribution_central)
         } else {
             Vector3D::new(0.0, 0.0, 0.0)

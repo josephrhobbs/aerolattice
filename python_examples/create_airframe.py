@@ -35,9 +35,9 @@ r5 = al.Rib(
 
 # Create airframe
 airframe = al.Airframe(
-    c_ref=1,
-    s_ref=10,
-    span_count=30,
+    b_ref=10,
+    s_ref=12.75,
+    span_count=40,
     chord_count=10,
     ribs=[
         r1,
@@ -56,7 +56,7 @@ cl   = sol.cl_distr
 
 print(f"CL  = {sol.cl}")
 print(f"CDi = {sol.cdi}")
-print(f"eff = {sol.cl**2 / 11.7 / m.pi / sol.cdi}")
+print(f"eff = {sol.span_eff}")
 
 plt.plot(*lift, label="c cl")
 plt.plot(*cl, label="cl")

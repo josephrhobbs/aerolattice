@@ -28,10 +28,9 @@ pub struct Airframe {
     /// Sideslip (radians).
     sideslip: f64,
 
-    #[allow(dead_code)]
     #[pyo3(get, set)]
-    /// Reference chord.
-    c_ref: f64,
+    /// Reference span.
+    b_ref: f64,
 
     #[pyo3(get, set)]
     /// Reference planform area.
@@ -44,11 +43,11 @@ pub struct Airframe {
 #[pymethods]
 impl Airframe {
     #[new]
-    #[pyo3(signature=(c_ref, s_ref, ribs, span_count=30, chord_count=10))]
+    #[pyo3(signature=(s_ref, b_ref, ribs, span_count=30, chord_count=10))]
     /// Construct a new airframe from two or more ribs.
     pub fn new(
-        c_ref: f64,
         s_ref: f64,
+        b_ref: f64,
         ribs: Vec<Rib>,
         span_count: usize,
         chord_count: usize,
@@ -95,7 +94,7 @@ impl Airframe {
         Ok (Self {
             aoa: 0.0,
             sideslip: 0.0,
-            c_ref,
+            b_ref,
             s_ref,
             sections,
         })
@@ -185,6 +184,7 @@ impl Airframe {
             normals,
             self.aoa,
             self.s_ref,
+            self.b_ref,
         )
     }
 }
