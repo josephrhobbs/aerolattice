@@ -64,10 +64,10 @@ impl Solution {
         // Total lift force, normalized by dynamic pressure
         let mut force = Vector3D::new(0.0, 0.0, 0.0);
 
-        // Circulation values
-        let circulations = &self.circulations.values;
+        // Sectional lift values
+        let lift = self.circulations.scale(2.0).values;
 
-        for i in 0..circulations.len() {
+        for i in 0..lift.len() {
             // Normal vector of this section
             let normal = self.normals[i];
 
@@ -83,13 +83,13 @@ impl Solution {
 
             // Magnitude of circulation
             // Normalized by dynamic pressure and span-wise dimension
-            let circulation_magnitude = circulations[i];
+            let lift_magnitude = lift[i];
 
             // Span-wise dimension
             let span_dim = self.spans[i];
 
             // Force contribution
-            force = force + force_dir.scale(2.0 * circulation_magnitude * span_dim);
+            force = force + force_dir.scale(lift_magnitude * span_dim);
         }
 
         force
@@ -98,43 +98,33 @@ impl Solution {
     #[getter]
     /// Solve for the CL (coefficient of lift) of this airframe.
     pub fn get_cl(&self) -> f64 {
-        // Total lift force, normalized by dynamic pressure
-        let mut force = 0.0;
+        // Direction of lift force
+        let dir = Vector3D::new(
+            -self.aoa.sin(),
+            0.0,
+            self.aoa.cos(),
+        );
 
-        // Lift distribution (c cl)
-        let lift = self.circulations.scale(2.0).values;
+        // Total aerodynamic force
+        let force = self.get_aero_force();
 
-        for i in 0..lift.len() {
-            // Local vector perpendicular to flow
-            let perpendicular = Vector3D::new(
-                -self.aoa.sin(),
-                0.0,
-                self.aoa.cos(),
-            );
-
-            // Cosine of angle between normal and perpendicular vector
-            let cos_angle = self.normals[i].dot(perpendicular);
-
-            force += lift[i] * self.spans[i] * self.induced_angles[i].cos() * cos_angle;
-        }
-
-        force / self.s_ref
+        force.dot(dir) / self.s_ref
     }
 
     #[getter]
     /// Solve for the CDi (coefficient of induced drag) of this airframe.
     pub fn get_cdi(&self) -> f64 {
-        // Total lift force, normalized by dynamic pressure
-        let mut force = 0.0;
+        // Direction of induced drag force
+        let dir = Vector3D::new(
+            self.aoa.cos(),
+            0.0,
+            self.aoa.sin(),
+        );
 
-        // Lift distribution (c cl)
-        let lift = self.circulations.scale(2.0).values;
+        // Total aerodynamic force
+        let force = self.get_aero_force();
 
-        for i in 0..lift.len() {   
-            force += lift[i] * self.spans[i] * self.induced_angles[i].sin();
-        }
-
-        force / self.s_ref
+        force.dot(dir) / self.s_ref
     }
 
     #[getter]
